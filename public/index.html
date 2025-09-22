@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Me-API Playground</title>
+  <style>
+    body { font-family: sans-serif; background-color: #f4f4f9; color: #333; max-width: 800px; margin: 2rem auto; padding: 1rem; }
+    h1, h2 { color: #444; }
+    #projects-list, #profile-info, #work-experience { background-color: #fff; padding: 1rem; border-radius: 8px; margin-top: 1rem; }
+    input { padding: 8px; margin-right: 5px; }
+    button { padding: 8px 12px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Me-API Playground</h1>
+  <div id="profile-info">Loading profile...</div>
+
+  <h2>Work Experience</h2>
+  <div id="work-experience"></div>
+
+  <h2>Search Projects by Skill</h2>
+  <form id="search-form">
+    <input type="text" id="skill-input" placeholder="e.g., Node, Express" />
+    <button type="submit">Search</button>
+  </form>
+  
+  <h2>Projects</h2>
+  <div id="projects-list">Loading projects...</div>
+
+  <script>
+    const API_URL = 'http://localhost:3000';
+
+    async function fetchProfile() {
+      const response = await fetch(`${API_URL}/profile`);
+      const data = await response.json();
+      
+      document.getElementById('profile-info').innerHTML = `<h2>${data.name} (${data.email})</h2>`;
+      
+      const workExperienceList = document.getElementById('work-experience');
+      if (data.workExperience && data.workExperience.length > 0) {
+        workExperienceList.innerHTML = data.workExperience.map(job => `
+          <div>
+            <h3>${job.position}</h3>
+            <p>${job.description}</p>
+          </div>
+        `).join('<hr>');
+      } else {
+        workExperienceList.innerHTML = '<p>No work experience listed.</p>';
+      }
+    }
+
+    async function fetchProjects(skill = '') {
+      let url = `${API_URL}/projects`;
+      if (skill) {
+        url += `?skill=${skill}`;
+      }
+      const response = await fetch(url);
+      const projects = await response.json();
+      
+      const projectsList = document.getElementById('projects-list');
+      if (projects.length === 0) {
+        projectsList.innerHTML = '<p>No projects found.</p>';
+        return;
+      }
+      
+      projectsList.innerHTML = projects.map(p => `
+        <div>
+          <h3>${p.title}</h3>
+          <p>${p.description}</p>
+        </div>
+      `).join('<hr>');
+    }
+
+    document.getElementById('search-form').addEventListener('submit', (event) => {
+      event.preventDefault();
+      const skill = document.getElementById('skill-input').value;
+      fetchProjects(skill);
+    });
+
+    fetchProfile();
+    fetchProjects();
+  </script>
+</body>
+</html>
